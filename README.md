@@ -1,6 +1,6 @@
-#  Wav Input, Time Difference Estimation Output, Web　App    
+#  Wav Input, Time Difference Estimation Output, Web App    
 
-チャイム音をマイクでステレオ録音したWAVファイルを入力して、L channelとR channelの音の時間差をpythonを使って推定して、その結果画像を表示するFlaskを使ったWeb　App。  
+チャイム音をマイクでステレオ録音したWAVファイルを入力して、L channelとR channelの音の時間差をpythonを使って推定して、その結果画像を表示するFlaskを使ったWeb App。  
 
 
 
