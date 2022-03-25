@@ -16,5 +16,8 @@ figure 結果画像が入る。推定時間を記述したテキストファイ�
 google colabとngorkをつかって動作確認するためのスクリプト
 [API_server_trial1.ipynb](https://colab.research.google.com/github/shun60s/time-difference-WebApp/blob/master/API_server_trial1.ipynb)  
 
+## License    
+MIT  
+
 
 
