@@ -26,6 +26,7 @@ import argparse
 import pathlib
 import math
 import copy
+import datetime
 
 import numpy as np
 from scipy.io.wavfile import read as wavread
@@ -73,9 +74,9 @@ class time_difference_estimation(object):
         self.chime_wav_tpoint, rt_code =self.spectrogram2(self.chime_wav_portion, sr=self.sr_chime, title='chime_wav', SHOW_PLOT=self.SHOW_PLOT)
     
     
-    def main0(self,file_path):
-        #
+    def main0(self,file_path, acept_maximum_wav_length=15):
         # 試験用のwavを読み込む
+        # acept_maximum_wav_lengthは、wavの受付可能な最大の長さで、単位は秒
         w_ref0,sr= self.read_wav( file_path)
         print (file_path)
         #print ('amax', np.amax(w_ref0[:,0]), np.amax(w_ref0[:,1]) )
@@ -84,10 +85,16 @@ class time_difference_estimation(object):
         
         if sr != self.sr_chime:
             print ('error: sr is different.')
-            return False
+            self.write2text(file_path, 'error: sr is different.', fname)
+            return False, -1
         if w_ref0.shape[1] != 2:
             print ('error: test wav is not stereo')
-            return False
+            self.write2text(file_path, 'error: test wav is not stereo.', fname)
+            return False, -1
+        if w_ref0.shape[0] > acept_maximum_wav_length * sr:
+            print ('error: wav size  is more than aceptable maximum length.')
+            self.write2text(file_path, 'error: wav size  is more than aceptable maximum length.', fname)
+            return False, -1
         
         ### wf ###
         wf_target_estimation1, wf_rt_code = self.sub_main1(w_ref0, sr, self.wf_channel, self.chime_wav_crude_curve, title='wf', SHOW_PLOT=self.ShowOntheWay)
@@ -97,23 +104,29 @@ class time_difference_estimation(object):
         
         # check if fault ?
         if (not wf_rt_code) or (not tv_rt_code):
-            print('There is fault in estimation1 stage')
-            return False
+            print('There is fault in estimation1 stage.')
+            self.write2text(file_path, 'There is fault in estimation1 stage.', fname)
+            return False, -1
         ### comp both
         if self.tv_channel == 0:
-            LR_estimation1= self.sub_main2(w_ref0, sr, tv_target_estimation1, wf_target_estimation1, save_path, title=file_path, SHOW_PLOT=self.ShowOntheWay, SHOW_PLOT2=self.SHOW_PLOT2)
+            LR_estimation1= self.sub_main2(w_ref0, sr, tv_target_estimation1, wf_target_estimation1, save_path, title=os.path.basename(file_path), SHOW_PLOT=self.ShowOntheWay, SHOW_PLOT2=self.SHOW_PLOT2)
         else:
-            LR_estimation1= self.sub_main2(w_ref0, sr, wf_target_estimation1, tv_target_estimation1, save_path, title=file_path, SHOW_PLOT=ShowOntheWay, SHOW_PLOT2=self.SHOW_PLOT2)
+            LR_estimation1= self.sub_main2(w_ref0, sr, wf_target_estimation1, tv_target_estimation1, save_path, title=os.path.basename(file_path), SHOW_PLOT=ShowOntheWay, SHOW_PLOT2=self.SHOW_PLOT2)
         
+        # write estimation result to text file
+        self.write2text(file_path, LR_estimation1, fname)
+        
+        return True, LR_estimation1 # estimation was done.
+    
+    
+    def write2text(self,file_path, LR_estimation1_or_message, fname):
         ### write to text file
         if self.test_number == 0: # new
-            self.write_text(file_path, LR_estimation1, fname=fname, mode='w')
+            self.write_text(file_path, LR_estimation1_or_message, fname=fname, mode='w')
         else:    # append 
-            self.write_text(file_path, LR_estimation1, fname=fname, mode='a')
-        
+            self.write_text(file_path, LR_estimation1_or_message, fname=fname, mode='a')
         #
         self.test_number=self.test_number+1  # count +1
-        return True  # estimation was done.
     
     
     def sub_main1(self, w_ref0, sr, channelx, chime_wav_crude_curve,title=None, SHOW_PLOT=True):
@@ -149,6 +162,7 @@ class time_difference_estimation(object):
                 break
             else:
                 print('re-try to spectrogram2', i)
+        
         
         # 目標位置の最初の予測時間
         target_estimation1= tpoint+sp0
@@ -582,9 +596,15 @@ class time_difference_estimation(object):
     
     def write_text(self, file_path, value, fname='output.txt',mode='a'):
         with open( fname, mode, encoding='UTF-8') as f:
+            dt_now = datetime.datetime.now()
+            f.write(dt_now.isoformat())
+            f.write(': ')
             f.write(file_path)
             f.write(',')
-            f.write(str(value))
+            if type(value) == str:
+                f.write(value)
+            else:
+                f.write(str(value))
             f.write('\n')
             f.close()
 
@@ -616,4 +636,6 @@ if __name__ == '__main__':
     
     # 試験用のwavを読ませて時間差を推定してみる
     for i,file_path in enumerate(flist):
-        tde.main0( file_path)
+        rtcode,t_time= tde.main0( file_path)
+        if rtcode:
+            print('t_time', t_time)

@@ -11,6 +11,12 @@ sample_wav チャイム音をマイクでステレオ録音したwavファイル
 uploads　入力したWAVファイルが入る。  
 figure 結果画像が入る。推定時間を記述したテキストファイルも入る。  
   
+  
+結果画像の例：  
+ ![figure1](docs/sample_1.png)   
+  
+  
+  
 ## 実験  
   
 google colabとngorkをつかって動作確認するためのスクリプト

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>推定結果 </title>
+<meta name="description" content=" " />
+<link href="style.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+<p>推定結果の画像を表示します。<br /></p>
+
+
+{% if rt_code=='1' %}
+<img src="{{ figure }}"><br />
+<p>推定時間は　{{ t_time }}　です。<br /></p>
+{% else %}
+<p>推定に失敗しました。<br /></p>
+{% endif %}
+
+<br />
+<br />
+<a href="/">はじめに戻る</a>
+</div>
+</body>
+</html>
