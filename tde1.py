@@ -87,7 +87,7 @@ class time_difference_estimation(object):
             print ('error: sr is different.')
             self.write2text(file_path, 'error: sr is different.', fname)
             return False, -1
-        if w_ref0.shape[1] != 2:
+        if len(w_ref0.shape) == 1 or w_ref0.shape[1] != 2:
             print ('error: test wav is not stereo')
             self.write2text(file_path, 'error: test wav is not stereo.', fname)
             return False, -1
