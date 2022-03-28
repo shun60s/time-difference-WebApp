@@ -86,15 +86,15 @@ class time_difference_estimation(object):
         if sr != self.sr_chime:
             print ('error: sr is different.')
             self.write2text(file_path, 'error: sr is different.', fname)
-            return False, -1
+            return False, -101
         if len(w_ref0.shape) == 1 or w_ref0.shape[1] != 2:
             print ('error: test wav is not stereo')
             self.write2text(file_path, 'error: test wav is not stereo.', fname)
-            return False, -1
+            return False, -102
         if w_ref0.shape[0] > acept_maximum_wav_length * sr:
             print ('error: wav size  is more than aceptable maximum length.')
             self.write2text(file_path, 'error: wav size  is more than aceptable maximum length.', fname)
-            return False, -1
+            return False, -103
         
         ### wf ###
         wf_target_estimation1, wf_rt_code = self.sub_main1(w_ref0, sr, self.wf_channel, self.chime_wav_crude_curve, title='wf', SHOW_PLOT=self.ShowOntheWay)
@@ -106,7 +106,7 @@ class time_difference_estimation(object):
         if (not wf_rt_code) or (not tv_rt_code):
             print('There is fault in estimation1 stage.')
             self.write2text(file_path, 'There is fault in estimation1 stage.', fname)
-            return False, -1
+            return False, -104
         ### comp both
         if self.tv_channel == 0:
             LR_estimation1= self.sub_main2(w_ref0, sr, tv_target_estimation1, wf_target_estimation1, save_path, title=os.path.basename(file_path), SHOW_PLOT=self.ShowOntheWay, SHOW_PLOT2=self.SHOW_PLOT2)

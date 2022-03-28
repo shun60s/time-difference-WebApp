@@ -9,17 +9,24 @@
 </head>
 <body>
 <div class="container-lg px-3 my-5 markdown-body">
-<p>推定結果の画像を表示します。<br /></p>
 
 
 {% if rt_code=='1' %}
+<p>推定結果の画像を表示します。<br /></p>
 <img src="{{ figure }}"><br />
 <p>推定時間は　{{ t_time }}　です。<br /></p>
 {% else %}
 <p>推定に失敗しました。<br /></p>
-<p>　{{ t_time }}　<br /></p>
+   {% if  t_time=='-101' %}
+      <p>サンプリング周波数が違います。<br /></p>
+   {% elif t_time=='-102' %}
+      <p>ステレオではありません。<br /></p>
+   {% elif t_time=='-103' %}
+      <p>許される長さを超えています。<br /></p>
+   {% elif t_time=='-104' %}
+      <p>計算の途中で失敗しました。<br /></p>
+   {% endif %}
 {% endif %}
-
 <br />
 <br />
 <a href="/">はじめに戻る</a>

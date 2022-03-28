@@ -7,6 +7,7 @@
 ## 内容   
 
 tde1.py チャイム音をマイクでステレオ録音しとき、L channelとR channelの音の時間差を推定するためのクラス。  
+api_server_trial1.py メインのスクリプト。  
 sample_wav チャイム音をマイクでステレオ録音したwavファイルのサンプルが入っている。  
 uploads　入力したWAVファイルが入る。  
 static/figure 結果画像が入る。推定時間を記述したテキストファイルも入る。  
