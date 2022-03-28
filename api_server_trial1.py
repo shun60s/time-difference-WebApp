@@ -13,7 +13,7 @@
 # Werkzeug 2.0.3
 
 import os
-from flask import Flask, request, redirect, url_for
+from flask import Flask, request, redirect, url_for, flash
 from flask import render_template
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
@@ -41,6 +41,8 @@ app.config['RESULT_FOLDER'] = RESULT_FOLDER
 # アップロードされる容量を制限する
 app.config['MAX_CONTENT_LENGTH'] = 2 * 2 * 44100 * 15
 
+# Flash機能を使うためsecret_keyを設定する
+app.config['SECRET_KEY'] = os.urandom(24)
 
 def allwed_file(filename):
     # .があるかどうかのチェックと、拡張子の確認
