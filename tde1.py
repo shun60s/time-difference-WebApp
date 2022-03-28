@@ -74,7 +74,7 @@ class time_difference_estimation(object):
         self.chime_wav_tpoint, rt_code =self.spectrogram2(self.chime_wav_portion, sr=self.sr_chime, title='chime_wav', SHOW_PLOT=self.SHOW_PLOT)
     
     
-    def main0(self,file_path, acept_maximum_wav_length=15):
+    def main0(self,file_path, title=None, acept_maximum_wav_length=15):
         # 試験用のwavを読み込む
         # acept_maximum_wav_lengthは、wavの受付可能な最大の長さで、単位は秒
         w_ref0,sr= self.read_wav( file_path)
@@ -82,6 +82,12 @@ class time_difference_estimation(object):
         #print ('amax', np.amax(w_ref0[:,0]), np.amax(w_ref0[:,1]) )
         save_path= self.save_dir + os.path.splitext(os.path.basename(file_path))[0] + '.png'
         fname= self.save_dir + 'output.txt'
+        
+        # タイトルの編集
+        if title is not None:
+            title_figure= title
+        else:
+            title_figure= os.path.basename(file_path)
         
         if sr != self.sr_chime:
             print ('error: sr is different.')
@@ -109,9 +115,9 @@ class time_difference_estimation(object):
             return False, -104
         ### comp both
         if self.tv_channel == 0:
-            LR_estimation1= self.sub_main2(w_ref0, sr, tv_target_estimation1, wf_target_estimation1, save_path, title=os.path.basename(file_path), SHOW_PLOT=self.ShowOntheWay, SHOW_PLOT2=self.SHOW_PLOT2)
+            LR_estimation1= self.sub_main2(w_ref0, sr, tv_target_estimation1, wf_target_estimation1, save_path, title=title_figure, SHOW_PLOT=self.ShowOntheWay, SHOW_PLOT2=self.SHOW_PLOT2)
         else:
-            LR_estimation1= self.sub_main2(w_ref0, sr, wf_target_estimation1, tv_target_estimation1, save_path, title=os.path.basename(file_path), SHOW_PLOT=ShowOntheWay, SHOW_PLOT2=self.SHOW_PLOT2)
+            LR_estimation1= self.sub_main2(w_ref0, sr, wf_target_estimation1, tv_target_estimation1, save_path, title=title_figure, SHOW_PLOT=ShowOntheWay, SHOW_PLOT2=self.SHOW_PLOT2)
         
         # write estimation result to text file
         self.write2text(file_path, LR_estimation1, fname)

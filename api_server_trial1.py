@@ -20,6 +20,7 @@ from werkzeug.utils import secure_filename
 from flask import send_from_directory
 import queue
 import time
+import uuid
 
 from tde1 import *
 
@@ -65,6 +66,10 @@ def uploads_file():
         if file and allwed_file(file.filename):
             # 危険な文字を削除（サニタイズ処理）
             filename = secure_filename(file.filename)
+            #　ファイル名をユニークなもにする
+            title=filename
+            filename=str(uuid.uuid1()) + '___'+ filename
+            #print ('filename, title', filename, title)
             # ファイルの保存
             file_path= os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save( file_path)
@@ -72,7 +77,7 @@ def uploads_file():
             # 実行しているものを1回分だけに制御する
             singleQueue.put(time.time()) 
             # 時間差を推定する　
-            rt_code,t_time= tde.main0( file_path)
+            rt_code,t_time= tde.main0( file_path, title=title)
             # 制限の解除
             singleQueue.get()
             singleQueue.task_done()
