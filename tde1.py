@@ -53,6 +53,11 @@ class time_difference_estimation(object):
             os.mkdir( self.save_dir)
         self.test_number=0
         
+        # when all not show, use non-GUI backend.
+        if (not self.SHOW_PLOT) and (not self.ShowOntheWay) and (not self.SHOW_PLOT2):
+            import matplotlib
+            matplotlib.use('Agg')
+        
         # chime wavを読み込む
         self.chime_wav, self.sr_chime= self.read_wav(  path_clime_wav)  #args.dir + args.clime_wav)
         print ('chime wav is ', path_clime_wav, self.sr_chime)
