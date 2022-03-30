@@ -20,8 +20,11 @@ static/figure 結果画像が入る。推定時間を記述したテキストフ
   
 ## 実験  
   
-google colabとngorkをつかって動作確認するためのスクリプト
+google colabとFlaskの組み込みサーバーとngorkをつかって動作確認するためのスクリプト
 [API_server_trial1.ipynb](https://colab.research.google.com/github/shun60s/time-difference-WebApp/blob/master/API_server_trial1.ipynb)  
+
+google colabとGunicornとngorkをつかって動作確認するためのスクリプト
+[API_server_gunicorn_trial1.ipynb](https://colab.research.google.com/github/shun60s/time-difference-WebApp/blob/master/API_server_gunicorn_trial1.ipynb)  
 
 ## License    
 MIT  

@@ -44,6 +44,10 @@ app.config['MAX_CONTENT_LENGTH'] = 2 * 2 * 44100 * 15
 # Flash機能を使うためsecret_keyを設定する
 app.config['SECRET_KEY'] = os.urandom(24)
 
+# 時間差を推定するインスタンスを作成する
+tde= time_difference_estimation('sample_wav/chime_only.wav', 1, 0,save_dir='static/figure/',SHOW_PLOT=False, ShowOntheWay=False, SHOW_PLOT2=False)
+
+
 def allwed_file(filename):
     # .があるかどうかのチェックと、拡張子の確認
     # OKなら１、だめなら0
@@ -105,7 +109,5 @@ def result_file():
     return render_template("result.html", figure=os.path.join(app.config['RESULT_FOLDER'],filename), t_time=t_time, rt_code=rt_code)
 
 if __name__ == "__main__":
-    # 時間差を推定するインスタンスを作成する
-    tde= time_difference_estimation('sample_wav/chime_only.wav', 1, 0,save_dir='static/figure/',SHOW_PLOT=False, ShowOntheWay=False, SHOW_PLOT2=False)
     # サーバーを起動する
-    app.run(threaded=True)  # port=5000
+    app.run(threaded=True) 
