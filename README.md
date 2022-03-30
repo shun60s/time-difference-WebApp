@@ -11,7 +11,7 @@ api_server_trial1.py メインのプログラム。
 sample_wav チャイム音をマイクでステレオ録音したwavファイルのサンプルが入っている。  
 uploads　アップロード入力したWAVファイルが入る。  
 static/figure 結果画像が入る。推定時間を記述したテキストファイルも入る。  
-static/css スタイルシートが入っている。
+static/css スタイルシートが入っている。  
 templates Jinja2に対応したhtmlファイルが入っている。  
 Profile herokuを利用して動作確認するためのファイル。  
 requirements.txt herokuを利用して動作確認するためのファイル。  
