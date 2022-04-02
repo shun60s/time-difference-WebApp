@@ -334,8 +334,8 @@ class time_difference_estimation(object):
         # spectrogramの隣接フレームの差が一番大きな位置を得る
         # 有音の部分などの　非局所的な情報も加味する必要あり　！？
         #-----------------------------------------------------------------------
-        spec_diffw, peaksw, t_pointw = self.spec_diff_x(specl,binsl)
-        spec_diffw_dr, peaksw_dr, t_pointw_dr = self.spec_diff_x(specl_drange,binsl)
+        rt_code_diffw, spec_diffw, peaksw, t_pointw = self.spec_diff_x(specl,binsl)
+        rt_code_diffw_dr, spec_diffw_dr, peaksw_dr, t_pointw_dr = self.spec_diff_x(specl_drange,binsl)
         #print ('t_pointw', t_pointw)
         
         # 境界として期待される図形をあてて境界を探す
@@ -351,7 +351,7 @@ class time_difference_estimation(object):
         
         rt_code=True
         # 富士山の様なピークでない場合は　上手く行っていない
-        if len(peaks) >= 2:  # ピークが2個以上ある
+        if len(peaks) >= 2:  # ピークが複数ある
             peak_value=sorted( cor0x[peaks], reverse=True)
             print ('sort of cor0x peaks', sorted( cor0x[peaks], reverse=True))
             if peak_value[0] < (peak_value[1] * MIN_RATIO):
@@ -382,7 +382,7 @@ class time_difference_estimation(object):
             ax5.plot(bins_cor0x[peaks], cor0x[peaks], "x")
             ax5.grid(which='both', axis='both')
             
-            if t_point_mode==0:
+            if t_point_mode==0 and rt_code_diffw:
                 ax1.plot(t_pointw, signalin[ int(t_pointw * sr)], "x")
             elif t_point_mode==1:
                 ax1.plot(t_pointb, signalin[ int(t_pointb * sr)], "x")
@@ -393,7 +393,7 @@ class time_difference_estimation(object):
         
         if t_point_mode==0:
             # spectrogramの隣接フレームの差が一番大きな位置の時間を返す（フレーム単位）
-            return t_pointw, rt_code
+            return t_pointw, (rt_code and rt_code_diffw)
         elif t_point_mode==1:
             #  spectrogramの最大値から閾値以下のものは背景とみなし一定の値に置き換えたものに
             # 境界として期待される図形をあてて推測した　境界の時間を返す
@@ -472,16 +472,31 @@ class time_difference_estimation(object):
         
         # ピーク最小幅  このチューニングだけでは動作は完璧にならないね。
         MIN_HIGH= 0.4   # ピークの最小高さ
-        MIN_DIS= 0.1    # 最小の周辺距離
-        MIN_WIDTH= 0.03 # 最小の周辺幅
+        MIN_DIS= 0.05    # 最小の周辺距離
+        MIN_WIDTH= 0.01 # 最小の周辺幅
+        FIX_VALUE= 600000
+        peaks, _ = signal.find_peaks(cor0, height= MIN_HIGH * max(cor0), distance= MIN_DIS * FIX_VALUE , width= MIN_WIDTH * FIX_VALUE)
         
-        peaks, _ = signal.find_peaks(cor0, height= MIN_HIGH * max(cor0), distance= MIN_DIS * cor0.shape[0] , width= MIN_WIDTH * cor0.shape[0])
+        #　山頂付近がなだらかな場合のエッジを推定する
+        TOLERANCE_HEIGHT=0.05
+        MIN_DIS2=   0.0001   # 最小の周辺距離
+        MIN_WIDTH2= 0.0001 # 最小の周辺幅
+        peaks_near_1st, _ = signal.find_peaks(cor0, height=  [cor0[peaks[0]] * (1-TOLERANCE_HEIGHT), cor0[peaks[0]] * (1+TOLERANCE_HEIGHT)],distance= MIN_DIS2 * FIX_VALUE , width= MIN_WIDTH2 * FIX_VALUE)
+        peaks_near_1st_left = peaks_near_1st[peaks_near_1st<peaks[0]]
+        #  近傍にneighbor_peaks個以上類似ピークがあって
+        NEIGHBOR_PEAKS=2
+        if len(peaks_near_1st_left) >= NEIGHBOR_PEAKS and peaks_near_1st_left[0] < peaks[0]:
+            peaks =  np.insert( peaks, 0, peaks_near_1st_left[0])
+            print('peaks add with peaks_near_1st_left[0] ') 
+        else: # reset peaks_near_1st_left
+            peaks_near_1st_left=[]
         
         # ピークの系列を返す
         RETURN_PEAKS=True
         
         if RETURN_PEAKS:
             diff0 = peaks - len(signalin1)
+            diff0 = diff0[ diff0 >0]
         else: #RETURN_MAX_PEAK:
             diff0= [ np.argmax(cor0) - len(signalin1) ]
         
@@ -507,6 +522,7 @@ class time_difference_estimation(object):
             #print ('diff0',  diff0 / sr)
             ax3.plot( x_time3, cor0)
             ax3.plot( x_time3[peaks], cor0[peaks], "x")
+            ax3.plot( x_time3[peaks_near_1st_left ], cor0[peaks_near_1st_left ], "o")
             ax3.grid(which='both', axis='both')
             
             plt.tight_layout()
@@ -556,14 +572,22 @@ class time_difference_estimation(object):
         
         peaks, _ = signal.find_peaks(spec_diff_mean, height= MIN_HIGH * max(spec_diff_mean) )
         
+        # check if there is no detected peaks?
+        if len(peaks) <=0:
+            print ('There is no peaks to be detected.')
+            rt_code=False
+            if bins is not None:
+                return rt_code, spec_diff_mean, peaks, -1
+            else:
+                return rt_code, spec_diff_mean, peaks # 差をとるので次数が1個減る
+        
         idmax=np.argmax(spec_diff_mean[peaks]) #  最大変化位置
-        
-        
+        rt_code=True
         if bins is not None:
             t_point= bins[peaks[idmax]+1] # 変化後のためプラス１する 
-            return spec_diff_mean, peaks, t_point
+            return rt_code, spec_diff_mean, peaks, t_point
         else:
-            return spec_diff_mean, peaks # 差をとるので次数が1個減る
+            return rt_code, spec_diff_mean, peaks # 差をとるので次数が1個減る
     
     
     def hpf_lpf(self, w_ref, sr, f_center=450):
@@ -629,6 +653,8 @@ if __name__ == '__main__':
     parser.add_argument('--clime_wav', '-c', default='sample_wav/chime_only.wav', help='specify chime wav as reference')
     args = parser.parse_args()
     
+    t_time_list=[]
+    
     # trial some test wav files
     if 1:
         flist= \
@@ -647,6 +673,12 @@ if __name__ == '__main__':
     
     # 試験用のwavを読ませて時間差を推定してみる
     for i,file_path in enumerate(flist):
-        rtcode,t_time= tde.main0( file_path)
+        rtcode,t_time= tde.main0( file_path, acept_maximum_wav_length=20)
         if rtcode:
+            t_time_list.append(t_time)
             print('t_time', t_time)
+    
+    # 集計結果を表示する
+    print('number of count', len(t_time_list))
+    print('max ', max(t_time_list))
+    print('min ', min(t_time_list))
