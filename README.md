@@ -15,7 +15,7 @@ static/css スタイルシートが入っている。
 templates Jinja2に対応したhtmlファイルが入っている。  
 Profile herokuを利用して動作確認するためのファイル。  
 requirements.txt herokuを利用して動作確認するためのファイル。  
-  
+api_server_trial2.py ajaxの非同期通信を使ったメインのプログラム。  
   
 結果画像の例：  
  ![figure1](docs/sample_1.png)   
