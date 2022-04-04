@@ -25,10 +25,10 @@ api_server_trial2.py ajaxの非同期通信を使ったメインのプログラ�
 ## 実験  
   
 google colabとFlaskの組み込みサーバーとngorkをつかって動作確認するためのスクリプト
-[API_server_trial1.ipynb](https://colab.research.google.com/github/shun60s/time-difference-WebApp/blob/master/API_server_trial1.ipynb)  
+[API_server_trial2.ipynb](https://colab.research.google.com/github/shun60s/time-difference-WebApp/blob/master/API_server_trial2.ipynb)  
 
 google colabとGunicornとngorkをつかって動作確認するためのスクリプト
-[API_server_gunicorn_trial1.ipynb](https://colab.research.google.com/github/shun60s/time-difference-WebApp/blob/master/API_server_gunicorn_trial1.ipynb)  
+[API_server_gunicorn_trial2.ipynb](https://colab.research.google.com/github/shun60s/time-difference-WebApp/blob/master/API_server_gunicorn_trial2.ipynb)  
 
 ## License    
 MIT  
