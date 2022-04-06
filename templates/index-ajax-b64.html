@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>時間差の推定 </title>
+<meta name="description" content=" " />
+<link href="static/css/style.css" rel="stylesheet">
+
+<style type="text/css">
+.blink {
+	-webkit-animation: blink 1s ease infinite;
+	animation: blink 1s ease infinite;
+}
+@-webkit-keyframes blink {
+	0% {opacity: 0;}
+	100% {opacity: 1;}
+}
+@keyframes blink {
+	0% {opacity: 0;}
+	100% {opacity: 1;}
+}
+</style>
+
+<script src="static/js/jquery-3.6.0.min.js"></script>
+
+</head>
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+<p>チャイム音をマイクでステレオ録音したWAVファイルを入力して、L channelとR channelの音の時間差をpythonを使って推定して、その結果画像を表示します。<br /></p>
+
+<h2>録音したWAVファイルを選択してアップロードしてください。
+</h2>
+<p>Upload Fileボタンを押してWAVファイルを選択ください。WAVファイルはサンプリング周波数44.1KHz　ステレオ録音　長さ15秒以内のものにしてください。<br /></p>
+
+
+<button>Upload File</button>
+<!--
+処理中の表示用
+-->
+<p class="blink"><span id="p_status"> </span></p>
+
+<script>
+    (function () {
+        'use strict';
+
+        var onClickButton = function () {
+            var html =
+                    '<form id="uploadForm" class="upload-form" style="display: none;">' +
+                    '<input id="File" name="file" type="file">' +
+                    '</form>';
+            $('body').append(html);
+            $('#File').on('change', uploadFile).click();
+        };
+        
+        
+        var uploadFile = function () {
+            var formData = new FormData($('#uploadForm')[0]);
+            var elem = document.getElementById('result_figure');
+            elem.src="{{ filename }}";  // blank画面を表示する。
+            $("#t_time").text('');
+            $("#p_status").text('処理中');
+            $.ajax({
+                url: '/upload',
+                type: 'post',
+                data: formData,
+                processData: false,
+                contentType: false,
+                timeout: 10000
+            }).done(function (data) {
+                console.log('done');
+                console.log(data['t_time'] + '\n');
+                console.log(data['rt_code'] + '\n');
+                console.log(data['figure_b64']);
+                $("#p_status").text('');
+                if (data['rt_code']){
+                    // Base64でデコーダしされたpng画像データを表示する。
+                    elem.src= "data:image/png;base64," + data['figure_b64'];
+                    $("#t_time").text('推定時間は' + data['t_time'] + 'です。');
+                }else{
+                    elem.src= "{{ filename2 }}";   // エラー画面を表示する。
+                    $("#t_time").text('推定に失敗しました。');
+                }
+            }).fail(function (data) {
+                console.log('fail');
+                $("#p_status").text('');
+                elem.src= "{{ filename2 }}"; 
+                $("#t_time").text('推定に失敗しました。');  // エラー画面を表示する。
+                
+            }).then(function () {
+                console.log('then');
+                $('#uploadForm').remove();
+            });
+
+        };
+
+        $('button').on('click', onClickButton);
+    })();
+</script>
+
+<!-- 
+以下に、推定画像と推定時間を表示する
+-->
+<img id='result_figure'><br />
+<p><span id='t_time'> </span></p>
+
+</div>
+</body>
+</html>

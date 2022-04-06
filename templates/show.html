@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>管理　リスト表示 </title>
+<meta name="description" content=" " />
+<link href="static/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+
+
+<p>upload_listを表示します。<br /></p>
+<ul>
+{% for i in upload_list %}
+    <li>{{ i }}</li>
+{% endfor %}
+</ul>
+<br />
+<p>figure_listを表示します。<br /></p>
+<ul>
+{% for i in figure_list %}
+    <li>{{ i }}</li>
+{% endfor %}
+</ul>
+<br />
+<p>output.txtを表示します。<br /></p>
+<OBJECT DATA="./static/figure/output.txt" TYPE="text/plain" HEIGHT="100%" WIDTH="100%"></OBJECT>
+</div>
+</body>
+</html>
