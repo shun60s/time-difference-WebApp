@@ -9,6 +9,7 @@
 #  （１）大雑把に相互相関を計算して類似箇所を見つける。
 #　（２-0）類似箇所のスペクトログラムを計算し、スペクトログラムが変化の大きい位置を見つける。
 #  （２-1）類似箇所のスペクトログラムを計算し、境界として期待される図形をあてて境界を探す。
+#  （２-2）調波構造の有無で振るい分ける。
 #  （３）更に、ＬＰＦ／ＨＰＦを掛けた波形の中で注目する短時間の波形の相互相関を計算してL channelとR channelの時間差を予測する。
 #
 
@@ -350,13 +351,57 @@ class time_difference_estimation(object):
         peaks, _ = signal.find_peaks(cor0x, height= MIN_HIGH * max(cor0x), distance= MIN_DIS * cor0x.shape[0] , width= MIN_WIDTH * cor0x.shape[0])
         
         rt_code=True
+        
+        # プラス側のピーク値とマイナス（負）側のピーク値が差があまり差がない場合は
+        # ノイズ部分とみなし　候補から排除する。
+        #
+        # プラス側のピーク値とマイナス（負）側のピーク値が差
+        POS_NEG_MAX_RATIO = 0.5
+        
+        if len(peaks) >= 1:
+            idmax_peaks=np.argmax(cor0x[peaks]) #  最大変化位置
+            value_peaks=cor0x[peaks[idmax_peaks]]
+            #print ('===> peaks spectrogram2', peaks, value_peaks)
+        
+        peaks_negative, _ = signal.find_peaks(cor0x * -1, height= MIN_HIGH * max(cor0x), distance= MIN_DIS * cor0x.shape[0] , width= MIN_WIDTH * cor0x.shape[0])
+        
+        if len(peaks_negative) >= 1:
+            idmax_peaks_negative=np.argmax(cor0x[peaks_negative] * -1) #  マイナス側の最大変化位置
+            value_peaks_negative=cor0x[peaks_negative[idmax_peaks_negative]]
+            #print ('===> peaks_negative spectrogram2', peaks_negative, value_peaks_negative)
+        
+        if len(peaks) >= 1 and len(peaks_negative) >= 1:
+            if (value_peaks_negative * -1) >  (value_peaks * POS_NEG_MAX_RATIO):
+                print('fault: it is like round noise.')
+                rt_code= False # return value as fault
+        
+        
         # 富士山の様なピークでない場合は　上手く行っていない
-        if len(peaks) >= 2:  # ピークが複数ある
+        if rt_code and len(peaks) >= 2:  # ピークが複数ある
             peak_value=sorted( cor0x[peaks], reverse=True)
             print ('sort of cor0x peaks', sorted( cor0x[peaks], reverse=True))
             if peak_value[0] < (peak_value[1] * MIN_RATIO):
                 print('fault: it is not like a peak as Mt Fuji.')
-                rt_code= False # return value as fault
+                
+                #  調波構造のチェックをしてピーク候補を排除して、もう一度、推定してみる。
+                peaks_checked = self.harmonic_check(peaks, bins_cor0x, binsl, specl_drange, freqsl[low_index: high_index],SHOW_PLOT=SHOW_PLOT)
+                
+                if len(peaks_checked) == 0: # 候補が一つもない。
+                    rt_code= False # return value as fault
+                else:  # 候補がある。
+                    idmax_peaks_checked=np.argmax(cor0x[peaks_checked]) #  最大変化位置
+                    if 1:
+                        print ('idmax_peaks_checked', idmax_peaks_checked, peaks_checked[idmax_peaks_checked])
+                        print ( 't_pointb_checked',  bins_cor0x[peaks_checked[idmax_peaks_checked]], t_pointb)
+                    peaks= peaks_checked
+                    t_pointb= bins_cor0x[peaks_checked[idmax_peaks_checked]]
+                    
+                    if len(peaks) >=2: # ピークが複数ある
+                        peak_value=sorted( cor0x[peaks], reverse=True)
+                        #print ('sort of cor0x peaks in spectrogram2', sorted( cor0x[peaks], reverse=True))
+                        if peak_value[0] < (peak_value[1] * MIN_RATIO):
+                            print('fault: it is not like a peak as Mt Fuji. re-try')
+                            rt_code= False # return value as fault
         
         if SHOW_PLOT:
             x_time= np.linspace(0, len(signalin)/sr, len(signalin)) 
@@ -380,6 +425,8 @@ class time_difference_estimation(object):
             
             ax5.plot(bins_cor0x, cor0x)
             ax5.plot(bins_cor0x[peaks], cor0x[peaks], "x")
+            ax5.plot(bins_cor0x, cor0x)
+            ax5.plot(bins_cor0x[peaks_negative], cor0x[peaks_negative], "v")
             ax5.grid(which='both', axis='both')
             
             if t_point_mode==0 and rt_code_diffw:
@@ -400,6 +447,66 @@ class time_difference_estimation(object):
             return t_pointb, rt_code
         else:
             return -1 # return negative value as error
+    
+    
+    def harmonic_check(self,peaks,bins_cor0x, binsl, specl_drange, freqsl, SHOW_PLOT):
+        # 調波構造をもつかチェックする。
+        # 調波構造の周波数の定義　（試験信号に合わせて要調整！）
+        f11=440     # 基本周波数
+        f12= f11 * 2 # f1の2倍の周波数
+        freq_list=[ f11, f12 ]
+        
+        # 調波構造の成分の下限値
+        MIN_RATIO= 0.5   # 一番大きいものからの比率
+        
+        # 周波数のindexの取得する
+        f11_ix=np.where(freqsl >=  f11)[0][0]
+        f12_ix=np.where(freqsl >=  f12)[0][0]
+        freq_index_list=[f11_ix,f12_ix]
+        
+        # 各peaksの調波構造をもつかチェックの結果が入る
+        result_check=[]
+        
+        if len(peaks)>0:
+            if SHOW_PLOT:
+                #
+                fig = plt.figure()
+                ax1 = fig.add_subplot(2, 1, 1)
+            
+            for i in peaks:
+                it= bins_cor0x[i]
+                # 時間のindexを取得する
+                ix=np.where(binsl>= it)[0][0]
+                # 対象フレーム　ixに1個たす
+                sd=specl_drange[:,ix+1]  
+                
+                if SHOW_PLOT:
+                    ax1.plot(freqsl,specl_drange[:,ix+1])
+                
+                check_code=True
+                for j in freq_index_list:
+                    if sd[j] >= ((np.amax(sd) - np.amin(sd)) * MIN_RATIO + np.amin(sd) ):
+                        #
+                    	if SHOW_PLOT:
+                            ax1.plot(freqsl[j],specl_drange[j,ix+1],'x',color='red')
+                    else:
+                        check_code=False
+                        break
+                if check_code:
+                    result_check.append(True)
+                else:
+                    result_check.append(False)
+                
+                if 0:
+                    if result_check[-1]:
+                        print ('harmonic check is true', i)
+                    else:
+                        print ('harmonic check is false', i)
+        #
+        peaks_checked= peaks[result_check]
+        
+        #  調波構造をもつpeaksだけ返す
+        return peaks_checked
     
     
     def crude_curve(self, signalin, title=None, SHOW_PLOT=False):
