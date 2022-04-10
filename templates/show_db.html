@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>database contents </title>
+<meta name="description" content=" " />
+<link href="static/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+
+<p>database contents<br /></p>
+<ul>
+{% for i in database_contents %}
+    <li>{{ i }}</li>
+{% endfor %}
+</ul>
+
+</div>
+</body>
+</html>

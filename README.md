@@ -17,6 +17,7 @@ Profile herokuを利用して動作確認するためのファイル。
 requirements.txt herokuを利用して動作確認するためのファイル。  
 api_server_trial2.py ajaxの非同期通信を使ったメインのプログラム。  
 api_server_trial3py 結果画像をBase64エンコードして返す、アップロード入力と結果画像を消去するメインのプログラム。  
+末尾が_dbのものはDATABASEへの動作状況の書き込みを追加したもの。  
 
 結果画像の例：  
  ![figure1](docs/sample_1.png)   
