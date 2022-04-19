@@ -33,7 +33,7 @@ google colabとGunicornとngorkをつかって動作確認するためのスク�
 [API_server_gunicorn_trial2.ipynb](https://colab.research.google.com/github/shun60s/time-difference-WebApp/blob/master/API_server_gunicorn_trial2.ipynb)  
 
 
-[動作確認用のURL](https://tde1.herokuapp.com/)  
+
 
 ## License    
 MIT  
